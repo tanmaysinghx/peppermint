@@ -17,25 +17,6 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { useUser } from "../../store/session";
 import { UserCombo } from "../Combo";
 
-function isHTML(str) {
-  var a = document.createElement("div");
-  a.innerHTML = str;
-
-  for (var c = a.childNodes, i = c.length; i--; ) {
-    if (c[i].nodeType == 1) return true;
-  }
-
-  return false;
-}
-function isJsonString(str) {
-  try {
-    JSON.parse(str);
-  } catch (e) {
-    return false;
-  }
-  return true;
-}
-
 const ticketStatusMap = [
   { id: 1, value: "needs_support", name: "Needs Support" },
   { id: 2, value: "in_progress", name: "In Progress" },
@@ -267,7 +248,6 @@ export default function Ticket() {
 
   const handleUpload = async () => {
     if (file) {
-
       const formData = new FormData();
       formData.append("file", file);
       formData.append("user", user.id);
@@ -327,9 +307,14 @@ export default function Ticket() {
 
   async function loadFromStorage() {
     const storageString = data.ticket.detail as PartialBlock[];
-    if (storageString && isJsonString(storageString)) {
+    // if (storageString && isJsonString(storageString)) {
+    //   return JSON.parse(storageString) as PartialBlock[]
+    // } else {
+    //   return undefined;
+    // }
+    try {
       return JSON.parse(storageString) as PartialBlock[];
-    } else {
+    } catch (e) {
       return undefined;
     }
   }
@@ -345,7 +330,11 @@ export default function Ticket() {
   useEffect(() => {
     if (status === "success") {
       loadFromStorage().then((content) => {
-        setInitialContent(content);
+        if (typeof content === "object") {
+          setInitialContent(content);
+        } else {
+          setInitialContent(undefined)
+        }
       });
     }
   }, [status, data]);
